@@ -11,6 +11,10 @@ app.get('/api/hello', (req, res) => {
   res.send({ express: 'Hello From Express' });
 });
 
+app.get('/api/recipes', (req, res) => {
+  res.send([{id: 1, name: 'Burger'}, {id: 2, name: 'Kartoffelsalat'}]);
+})
+
 app.post('/api/world', (req, res) => {
   console.log(req.body);
   res.send(
