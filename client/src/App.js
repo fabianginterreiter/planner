@@ -1,6 +1,7 @@
 import './App.css';
 import Recipes from './components/Recipes';
 import Recipe from './components/Recipe';
+import RecipeEdit from './components/RecipeEdit';
 import {
   BrowserRouter as Router,
   Switch,
@@ -26,16 +27,13 @@ function App() {
           </ul>
         </nav>
 
-        {/* A <Switch> looks through its children <Route>s and
-            renders the first one that matches the current URL. */}
         <Switch>
           <Route path="/calendar">
             <div>calendar</div>
           </Route>
-          <Route path="/recipes/:id"><Recipe /></Route>
-          <Route path="/recipes">
-          <div>Rezepte <Recipes /></div>
-          </Route>
+          <Route path="/recipes/:id/edit" component={RecipeEdit} />
+          <Route path="/recipes/:id" component={Recipe} />
+          <Route path="/recipes" component={Recipes} />
           <Route path="/">
           <div>default</div>
           </Route>

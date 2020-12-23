@@ -1,36 +1,51 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux'
 import { withRouter } from "react-router";
+import {Link } from "react-router-dom";
+import { setRecipe } from '../actions'
 
 class Recipe extends Component {
-    componentDidMount() {
+  componentDidMount() {
+    this.props.setRecipe(null);
 
-        console.log(this.props.match.params.id);
-      
-        this.callApi()
-      .then(res => this.props.setRecipes(res))
+    this.callApi(this.props.match.params.id)
+      .then(res => this.props.setRecipe(res))
       .catch(err => console.log(err));
     }
 
-    callApi = async () => {
-        const response = await fetch('/api/recipes');
+    callApi = async (id) => {
+        const response = await fetch('/graphql', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+          },
+          body: JSON.stringify({query: `{ recipes(id: ${id}) { id, name } }`})
+        });
         const body = await response.json();
         if (response.status !== 200) throw Error(body.message);
     
-        return body;
+        return body.data.recipes[0];
       };
 
     render() {
-        return <div>
-            rezept
-            </div>
+      if (!this.props.recipe) {
+        return <div />;
+      }
+
+      return <div>
+          {this.props.recipe.name}
+          <Link to={`/recipes/${this.props.match.params.id}/edit`}>Edit</Link>
+          </div>
     }
 }
 
 const mapStateToProps = state => ({
+  recipe: state.recipe
 })
 
 const mapDispatchToProps = dispatch => ({
+  setRecipe: recipe => dispatch(setRecipe(recipe))
 })
 
 export default connect(mapStateToProps, mapDispatchToProps)(withRouter(Recipe))

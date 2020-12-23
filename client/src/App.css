@@ -1,3 +1,29 @@
 .App {
 
 }
+
+nav {
+    background-color: #434343;
+}
+
+nav > ul {
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+  }
+
+nav > ul > li {
+    display: inline;
+}
+
+nav > ul > li > a {
+    width: 60px;
+    color: #dddddd;
+    text-decoration: none;
+    padding: 5px;
+}
+
+nav > ul > li > a:hover {
+    background-color: #dddddd;
+    color: #434343;
+}

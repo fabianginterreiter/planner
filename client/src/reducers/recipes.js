@@ -1,11 +1,13 @@
 const recipes = (state = [], action) => {
     switch (action.type) {
       case 'SET_RECIPES':
-        return action.recipes
+        return action.recipes;
       case 'ADD_RECIPE':
-        return [...state, { id: action.id, name: action.name }]
+        return [...state, action.recipe];
+      case 'DELETE_RECIPE':
+        return state.filter(recipe => recipe.id !== action.recipe.id);
       default:
-        return state
+        return state;
     }
   }
   

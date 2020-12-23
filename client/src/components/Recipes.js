@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux'
-import { setRecipes } from '../actions'
+import { setRecipes, deleteRecipe } from '../actions'
+import NewRecipeForm from './NewRecipeForm';
 
 import {
     Link
@@ -14,16 +15,38 @@ class Recipes extends Component {
     }
 
     callApi = async () => {
-        const response = await fetch('/api/recipes');
+        const response = await fetch('/graphql', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+          },
+          body: JSON.stringify({query: "{ recipes { id, name } }"})
+        });
         const body = await response.json();
         if (response.status !== 200) throw Error(body.message);
     
-        return body;
+        return body.data.recipes;
       };
+
+    deleteRecipe(recipe) {
+      fetch('/graphql', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        body: JSON.stringify({query: `mutation {
+          deleteRecipe(id: ${recipe.id})
+        }
+        `})
+      }).then(() => this.props.deleteRecipe(recipe));
+    }
 
     render() {
         return <div>
-                <ul>{this.props.recipes.map((recipe) => <li key={recipe.id}><Link to={`/recipes/${recipe.id}`}>{recipe.name}</Link></li>)}</ul>
+          <NewRecipeForm />
+                <ul>{this.props.recipes.map((recipe) => <li key={recipe.id}><Link to={`/recipes/${recipe.id}`}>{recipe.name}</Link> <button onClick={() => this.deleteRecipe(recipe)}>Delete</button></li>)}</ul>
             </div>
     }
 }
@@ -33,7 +56,8 @@ const mapStateToProps = state => ({
 })
 
 const mapDispatchToProps = dispatch => ({
-    setRecipes: recipes => dispatch(setRecipes(recipes))
+    setRecipes: recipes => dispatch(setRecipes(recipes)),
+    deleteRecipe: recipe => dispatch(deleteRecipe(recipe))
 })
 
 export default connect(mapStateToProps, mapDispatchToProps)(Recipes)
