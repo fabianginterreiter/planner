@@ -1,0 +1,16 @@
+.InputSelectForm {
+    background-color: green;
+}
+
+.InputSelectForm > input {
+    background-color: yellow;
+}
+
+.InputSelectForm > div {
+    background-color: blue;
+    position: absolute;
+}
+
+.selected {
+    background-color: red;
+}

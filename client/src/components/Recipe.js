@@ -20,7 +20,28 @@ class Recipe extends Component {
             'Content-Type': 'application/json',
             'Accept': 'application/json',
           },
-          body: JSON.stringify({query: `{ recipes(id: ${id}) { id, name } }`})
+          body: JSON.stringify({query: `{ recipes(id: ${id}) {  
+            id
+            name
+            source
+            portions
+            steps {
+              description
+            }
+            additions {
+              amount
+              unit {
+                id
+                name
+                short
+              }
+              ingredient {
+                id
+                name
+              }
+            }
+          }
+        }`})
         });
         const body = await response.json();
         if (response.status !== 200) throw Error(body.message);
@@ -29,13 +50,25 @@ class Recipe extends Component {
       };
 
     render() {
-      if (!this.props.recipe) {
+      if (!this.props.recipe || !this.props.recipe.name) {
         return <div />;
       }
 
       return <div>
-          {this.props.recipe.name}
+          <h1>{this.props.recipe.name}</h1>
           <Link to={`/recipes/${this.props.match.params.id}/edit`}>Edit</Link>
+
+<br />
+{this.props.recipe.source} - {this.props.recipe.portions}
+          <h2>Zutaten</h2>
+          <ul>
+            {this.props.recipe.additions.map((addition) => <li key={addition.ingredient.id}>{addition.amount > 0 ? addition.amount : ''}{addition.unit ? addition.unit.short : ''} <Link to={`/ingredients/${addition.ingredient.id}`}>{addition.ingredient.name}</Link></li>)}
+          </ul>
+
+          <h2>Zubereitung</h2>
+          <ol>
+            {this.props.recipe.steps.map((step, idx) => <li key={idx}>{step.description.split("\n").map((i, key) => <div key={key}>{i}</div>)}</li>)}            
+          </ol>
           </div>
     }
 }

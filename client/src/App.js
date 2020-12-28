@@ -2,6 +2,8 @@ import './App.css';
 import Recipes from './components/Recipes';
 import Recipe from './components/Recipe';
 import RecipeEdit from './components/RecipeEdit';
+import Ingredients from './components/Ingredients';
+import Ingredient from './components/Ingredient';
 import {
   BrowserRouter as Router,
   Switch,
@@ -34,6 +36,8 @@ function App() {
           <Route path="/recipes/:id/edit" component={RecipeEdit} />
           <Route path="/recipes/:id" component={Recipe} />
           <Route path="/recipes" component={Recipes} />
+          <Route path="/ingredients/:id" component={Ingredient} />
+          <Route path="/ingredients" component={Ingredients} />
           <Route path="/">
           <div>default</div>
           </Route>

@@ -27,3 +27,17 @@ nav > ul > li > a:hover {
     background-color: #dddddd;
     color: #434343;
 }
+
+form > div {
+    margin: 5px 0;
+}
+
+input, select {
+    border: 1px solid black;
+    padding: 3px;
+    border-radius: 3px;
+}
+
+button {
+
+}
