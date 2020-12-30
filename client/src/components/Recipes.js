@@ -29,24 +29,12 @@ class Recipes extends Component {
         return body.data.recipes;
       };
 
-    deleteRecipe(recipe) {
-      fetch('/graphql', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-        },
-        body: JSON.stringify({query: `mutation {
-          deleteRecipe(id: ${recipe.id})
-        }
-        `})
-      }).then(() => this.props.deleteRecipe(recipe));
-    }
+    
 
     render() {
         return <div>
           <NewRecipeForm />
-                <ul>{this.props.recipes.map((recipe) => <li key={recipe.id}><Link to={`/recipes/${recipe.id}`}>{recipe.name}</Link> <button onClick={() => this.deleteRecipe(recipe)}>Delete</button></li>)}</ul>
+                <ul>{this.props.recipes.map((recipe) => <li key={recipe.id}><Link to={`/recipes/${recipe.id}`}>{recipe.name}</Link></li>)}</ul>
             </div>
     }
 }

@@ -9,13 +9,10 @@ import { setUnits, setRecipe, setRecipeName, setRecipeSource, setRecipeStepDescr
 
 class RecipeEdit extends Component {
 
-  state = { loaded:false }
-
   componentDidMount() {
     this.callApi(this.props.match.params.id)
       .then(res => {
           this.props.setRecipe(res);
-          this.setState({loaded:true})
       })
       .catch(err => console.log(err));
     }
@@ -62,6 +59,7 @@ class RecipeEdit extends Component {
     };
 
     handleSave = (e) => {
+      e.preventDefault();
 
       Promise.all(this.props.recipe.additions.filter((addition) => !(addition.ingredient.id > 0)).map((addition) => fetch('/graphql', {
         method: 'POST',
@@ -99,7 +97,9 @@ class RecipeEdit extends Component {
               ) {
                 id
               }
-            }`})})}).then((e) => this.props.history.push(`/recipes/${this.props.match.params.id}`));
+            }`})})}).then((e) => {
+              this.props.history.push(`/recipes/${this.props.recipe.id}`);
+            });
     }
 
     handleIngredientChange(idx, ingredient) {
@@ -107,8 +107,9 @@ class RecipeEdit extends Component {
       this.props.setRecipeAdditionIngredient(idx, ingredient);
     }
 
-    createAddition() {
-      this.props.addRecipeAddition({amount: 0, ingredient: null, unit: {id: 0}})
+    createAddition(e) {
+      e.preventDefault();
+      this.props.addRecipeAddition({amount: 1, ingredient: null, unit: {id: 0}})
     }
 
     render() {
@@ -151,11 +152,13 @@ class RecipeEdit extends Component {
                   </select>                  
                 </td>
                 <td><InputSelectForm value={addition.ingredient} values={this.props.ingredients} onChange={(ingredient) => this.handleIngredientChange(idx, ingredient)} /></td>
-                <td><button onClick={() => this.props.deleteRecipeAddition(idx)}>Delete</button></td>
+                <td><button onClick={(e) => {
+                  e.preventDefault();
+                  this.props.deleteRecipeAddition(idx);}}>Delete</button></td>
               </tr>)} 
             </tbody>
           </table>
-          <button onClick={() => this.createAddition()}>Add</button>
+          <button onClick={(e) => this.createAddition(e)}>Add</button>
         </div>
 
          <h2>Zubereitung</h2>
@@ -163,9 +166,9 @@ class RecipeEdit extends Component {
          <div>
           {this.props.recipe.steps.map((step, idx) => <div key={idx}><textarea value={step.description}
            onChange={(e) => this.props.setRecipeStepDescription(idx, e.target.value)} />
-           <button onClick={() => this.props.deleteRecipeStep(idx)}>Delete</button>
+           <button onClick={(e) => { e.preventDefault() ; this.props.deleteRecipeStep(idx); }}>Delete</button>
            </div>)}
-           <button onClick={() => this.props.addRecipeStep()}>Add</button>
+           <button onClick={(e) => { e.preventDefault(); this.props.addRecipeStep(); }}>Add</button>
          </div>
          <button onClick={(e) => this.handleSave(e)}>Save</button> <Link to={`/recipes/${this.props.match.params.id}`}>Cancel</Link>
          </form></div>

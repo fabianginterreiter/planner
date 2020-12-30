@@ -94,7 +94,33 @@ var recipeType = new GraphQLObjectType({
   }
 });
 
+var entryType = new GraphQLObjectType({
+  name: 'Entry',
+  fields: {
+    portions: { type: GraphQLInt },
+    recipe: {
+      type: recipeType,
+      resolve: ({recipe_id}) => {
+        return knex('recipes').where('id', recipe_id).first();
+      }
+    }
+  }
+});
 
+var dayType = new GraphQLObjectType({
+  name: 'Day',
+  fields: {
+    day: { type: GraphQLString },
+    entries: {
+      type: GraphQLList(entryType),
+      resolve: ({day}) => {
+        const values = day.split("-")
+
+        return knex('entries').where('year', values[0]).where('month', values[1]).where('day', values[2]);
+      }
+    }
+  }
+})
 
 var queryType = new GraphQLObjectType({
   name: 'Query',
@@ -145,6 +171,16 @@ var queryType = new GraphQLObjectType({
 
         return query;
       }
+    },
+
+    entries: {
+      type: new GraphQLList(dayType),
+      args: {
+        days: { type: GraphQLList(GraphQLString) }
+      },
+      resolve: (_, {days}) => {
+        return days.map((day) => ({day}));
+      }
     }
   }
 });
@@ -161,7 +197,7 @@ var mutationType = new GraphQLObjectType({
       resolve: (_, {name}) => {
 
       return knex.table('recipes').insert({
-          'name':  name
+          name, source: '', portions: 0
         }).then((ids) => knex('recipes').where('id', ids[0]).first());
       }
     },
@@ -198,7 +234,7 @@ var mutationType = new GraphQLObjectType({
         return knex('recipes').where('id', id).update({
           name,
           source,
-          portions
+          portions, 
         })
         .then(() => knex('additions').where('recipe_id', id).del())
         .then(() => knex('additions').insert(additions.map((addition, index) => {
@@ -223,7 +259,7 @@ var mutationType = new GraphQLObjectType({
     deleteRecipe: {
       type: GraphQLString,
       args: {
-        id: { type: GraphQLID }
+        id: { type: GraphQLInt }
       },
       resolve: (_, {id}) => {
         return knex('recipes').where('id', id).del().then(() => { return "OK" });
@@ -268,6 +304,26 @@ var mutationType = new GraphQLObjectType({
         id: { type: GraphQLInt}
       },
       resolve: (_, {id}) => knex('ingredients').where('id', id).del().then(() => { return "OK" })
+    },
+
+    createEntry: {
+      type: entryType,
+      args: {
+        day: { type: GraphQLString},
+        portions:{ type:  GraphQLInt},
+        recipeId: { type: GraphQLInt},
+      },
+      resolve: (_, {day, recipeId, portions}) => {
+        const values = day.split("-");
+        const object = {
+          year: values[0], 
+          month: values[1], 
+          day: values[2],
+          recipe_id: recipeId, 
+          portions
+        };
+        return knex('entries').insert(object).then(() => object);
+      }
     }
   }  
 });

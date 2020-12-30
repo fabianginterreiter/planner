@@ -4,6 +4,7 @@ import Recipe from './components/Recipe';
 import RecipeEdit from './components/RecipeEdit';
 import Ingredients from './components/Ingredients';
 import Ingredient from './components/Ingredient';
+import Week from './components/Week';
 import {
   BrowserRouter as Router,
   Switch,
@@ -30,9 +31,7 @@ function App() {
         </nav>
 
         <Switch>
-          <Route path="/calendar">
-            <div>calendar</div>
-          </Route>
+          <Route path="/calendar" component={Week} />
           <Route path="/recipes/:id/edit" component={RecipeEdit} />
           <Route path="/recipes/:id" component={Recipe} />
           <Route path="/recipes" component={Recipes} />

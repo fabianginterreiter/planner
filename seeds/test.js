@@ -27,5 +27,10 @@ exports.seed = function(knex) {
         {recipe_id: 1, description: 'Hello Step 1', position: 1},
         {recipe_id: 1, description: 'Hello Step 2', position: 2}
       ]))
+      .then(() => knex('entries').del())
+      .then(() => knex('entries').insert([
+        {year: 2021, month: 1, day: 1, portions: 3, recipe_id: 1},
+        {year: 2021, month: 1, day: 2, portions: 2, recipe_id: 2}
+      ]))
       ;
 };

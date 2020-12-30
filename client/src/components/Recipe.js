@@ -49,6 +49,20 @@ class Recipe extends Component {
         return body.data.recipes[0];
       };
 
+      deleteRecipe() {
+        fetch('/graphql', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+          },
+          body: JSON.stringify({query: `mutation {
+            deleteRecipe(id: ${this.props.recipe.id})
+          }
+          `})
+        }).then(() => this.props.history.push(`/recipes`));
+      }
+
     render() {
       if (!this.props.recipe || !this.props.recipe.name) {
         return <div />;
@@ -57,6 +71,7 @@ class Recipe extends Component {
       return <div>
           <h1>{this.props.recipe.name}</h1>
           <Link to={`/recipes/${this.props.match.params.id}/edit`}>Edit</Link>
+          <button onClick={() => this.deleteRecipe()}>Delete</button>
 
 <br />
 {this.props.recipe.source} - {this.props.recipe.portions}

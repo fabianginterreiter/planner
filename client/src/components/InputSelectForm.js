@@ -18,18 +18,21 @@ class InputSelectForm extends Component {
     }
 
     componentDidMount() {
-        const text = (this.props.value) ? this.props.value.name : '';
+        this.setState({
+            width: this.ref.current.clientWidth
+        }, () => this.setText((this.props.value) ? this.props.value.name : ''))
+    }
 
+    setText(text) {
         const values = this.props.values.filter(value => value.name.toLowerCase().startsWith(text.toLowerCase()));
         const target = this.props.values.find((value) => value.name.toLowerCase() === text.toLowerCase());
         const selected = target ? 0 : -1;
-        
+
         this.setState({
             text,
             values,
             target,
             selected,
-            width: this.ref.current.clientWidth
         })
     }
 
@@ -49,43 +52,17 @@ class InputSelectForm extends Component {
                 target: selected < 0 ? null : this.state.values[selected]
             })
         } else if (e.key === 'Enter') {
+            e.preventDefault();
             const text = this.state.values[this.state.selected].name;
-            const values = this.props.values.filter(value => value.name.toLowerCase().startsWith(text.toLowerCase()));
-            const target = this.props.values.find((value) => value.name.toLowerCase() === text.toLowerCase());
-
-            this.setState({
-                text, values, target
-            })
-
+            this.setText(text);
         } else if (e.key === 'Escape') {
             console.log("ESC");
             e.preventDefault();
-            const values = this.props.values.filter(value => value.name.toLowerCase().startsWith(this.props.value.name.toLowerCase()));
-            const target = this.props.values.find((value) => value.name.toLowerCase() === this.props.value.name.toLowerCase());
-            const selected = target ? 0 : -1;
 
-            this.setState({
-                text: this.props.value.name,
-                values,
-                target,
-                selected
-            })
+            this.setText((this.props.value) ? this.props.value.name : '');
         } else {
             // console.log(e.key);
         }
-    }
-
-    handleInputChange(e) {
-        const text = e.target.value;
-        const values = this.props.values.filter(value => value.name.toLowerCase().startsWith(e.target.value.toLowerCase()));
-        const target = this.props.values.find((value) => value.name.toLowerCase() === e.target.value.toLowerCase());
-
-        this.setState({
-            text,
-            values,
-            target,
-            selected: target ? 0 : -1
-        })
     }
 
     handleBlur() {
@@ -100,7 +77,7 @@ class InputSelectForm extends Component {
                 this.props.onChange({name: this.state.text});
             }
         } else {
-            if (!this.props.value && (this.props.value.id !== this.state.target.id)) {
+            if (!this.props.value || (this.props.value.id !== this.state.target.id)) {
                 this.props.onChange(this.state.target);
             }
             
@@ -113,11 +90,11 @@ class InputSelectForm extends Component {
     render() {
         return <div className="InputSelectForm" ref={this.ref}>
           <input type="text" value={this.state.text} 
-            onChange={(e) => this.handleInputChange(e)} 
+            onChange={(e) => this.setText(e.target.value)} 
             onFocus={() => this.setState({focus:true})} 
             onBlur={() => this.handleBlur()} 
             onKeyUp={(e) => this.handleKeyUp(e)} />
-            {this.state.focus && <div style={{width: this.state.width}}>
+            {(this.state.focus && this.state.text.length > 0 ) && <div style={{width: this.state.width}}>
                 {!this.state.target && this.state.text.length > 0 && <div className={this.state.selected < 0 ? 'selected' : ''}>Create: {this.state.text}</div>}
                 {this.state.values.map((value, idx) => <div key={value.id} className={this.state.selected === idx ? 'selected' : ''}>{value.name}</div>)}                
             </div>}
