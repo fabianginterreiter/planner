@@ -147,7 +147,7 @@ var queryType = new GraphQLObjectType({
         id: { type: GraphQLInt }
       },
       resolve: (_, {id}) => {
-        var query = knex('recipes');
+        var query = knex('recipes').orderBy('name', 'asc');
 
         if (id) {
           query.where('id', id);
@@ -280,10 +280,7 @@ var mutationType = new GraphQLObjectType({
         names: { type: GraphQLList(GraphQLString) }
       },
       resolve: (_, {names}) => {
-        console.log(names);
-
         return Promise.all(names.map((name) => knex('ingredients').insert({name}).then((ids) => (ids[0])))).then((ids) => {
-          console.log(ids);
           return knex('ingredients').whereIn('id', ids);
         })
       }
@@ -324,6 +321,43 @@ var mutationType = new GraphQLObjectType({
         };
         return knex('entries').insert(object).then(() => object);
       }
+    },
+
+    updateEntry: {
+      type: entryType,
+      args: {
+        day: { type: GraphQLString},
+        portions:{ type:  GraphQLInt},
+        recipeId: { type: GraphQLInt},
+      },
+      resolve: (_, {day, recipeId, portions}) => {
+        const values = day.split("-");
+        const object = {
+          year: values[0], 
+          month: values[1], 
+          day: values[2],
+          recipe_id: recipeId, 
+          portions
+        };
+        return knex('entries').where('year', object.year).where('month', object.month).where('day', object.day).where('recipe_id', recipeId).update({portions}).then(() => object);
+      }
+    },
+
+    deleteEntry: {
+      type: GraphQLString,
+      args: {
+        day: { type: GraphQLString},
+        recipeId: { type: GraphQLInt},
+      },
+      resolve: (_, {day, recipeId, portions}) => {
+        const values = day.split("-");
+        const object = {
+          year: values[0], 
+          month: values[1], 
+          day: values[2],
+        };
+        return knex('entries').where('year', object.year).where('month', object.month).where('day', object.day).where('recipe_id', recipeId).del().then(() => "OK");
+      }
     }
   }  
 });
@@ -337,5 +371,7 @@ app.use('/graphql', graphqlHTTP({
   schema: schema,
   graphiql: true,
 }));
+
+app.use(express.static('client/build'));
 
 app.listen(port, () => console.log(`Listening on port ${port}`));

@@ -13,7 +13,7 @@ exports.seed = function(knex) {
     ]))
     .then(() => knex('recipes').del())
     .then(() => knex('recipes').insert([
-        {id: 1, name: 'Pesto', source: 'chefkoch', portions: 2},
+        {id: 1, name: 'Pesto', source: 'https://stackoverflow.com/questions/5717093/check-if-a-javascript-string-is-a-url', portions: 2},
         {id: 2, name: 'Sellerieschnitzel', source: 'buch', portions: 0},
         {id: 3, name: 'Tomatensauce', source: 'haha', portions: 1}
       ]))
@@ -29,8 +29,8 @@ exports.seed = function(knex) {
       ]))
       .then(() => knex('entries').del())
       .then(() => knex('entries').insert([
-        {year: 2021, month: 1, day: 1, portions: 3, recipe_id: 1},
-        {year: 2021, month: 1, day: 2, portions: 2, recipe_id: 2}
+        {year: 2021, month: 1, day: 9, portions: 3, recipe_id: 1},
+        {year: 2021, month: 1, day: 10, portions: 2, recipe_id: 2}
       ]))
       ;
 };

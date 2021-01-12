@@ -1,0 +1,38 @@
+footer {
+    border-top: 1px solid #666666;
+    padding: 15px 0;
+    min-height: 30px;
+    font-size: 0.7em;
+    color: #666666;
+}
+
+footer > .source {
+    float: left;
+}
+
+
+footer > .options {
+    float: right;
+}
+
+.button-simple {
+    border: 0;
+    text-decoration: underline;
+    background: none;
+    color: inherit;
+    font-size: 1em;
+}
+
+.button-simple:hover {
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.Recipe {
+
+}
+
+.portions {
+    font-style: italic;
+    font-size: 0.7em;
+}

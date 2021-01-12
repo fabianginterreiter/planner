@@ -103,6 +103,7 @@ class RecipeEdit extends Component {
     }
 
     handleIngredientChange(idx, ingredient) {
+      console.log("Ingredient Change");
       console.log(ingredient);
       this.props.setRecipeAdditionIngredient(idx, ingredient);
     }
@@ -112,13 +113,19 @@ class RecipeEdit extends Component {
       this.props.addRecipeAddition({amount: 1, ingredient: null, unit: {id: 0}})
     }
 
+    getIngredients(text, ingredientsToFilter) {
+      return new Promise((resolve, reject) => {
+        resolve(this.props.ingredients.filter(value => !ingredientsToFilter.includes(value.id) && value.name.toLowerCase().startsWith(text.toLowerCase()))); // 
+    });
+    }
+
     render() {
       if (!this.props.recipe) {
         return <div />;
       }
 
       return <div> 
-        <h2>Edit</h2>
+        <h2>Edit '{this.props.recipe.name}'</h2>
         <form>
           <div>
          <label htmlFor="title">Title:</label> <input id="title" type="text" value={this.props.recipe.name} onChange={(e) => this.props.setRecipeName(e.target.value)} />
@@ -143,7 +150,7 @@ class RecipeEdit extends Component {
             </thead>
             <tbody>
               {this.props.recipe.additions.map((addition, idx) => <tr key={idx}>
-                <td><input type="number" min="0" step="0.1" value={addition.amount} onChange={(e) => this.props.setRecipeAdditionAmount(idx, e.target.value)} /></td>
+                <td><input type="number" min="0" step="0.01" value={addition.amount} onChange={(e) => this.props.setRecipeAdditionAmount(idx, e.target.value)} /></td>
                 <td>
                 <select value={addition.unit ? addition.unit.id : 0} 
                   onChange={(e) => this.props.setRecipeAdditionUnit(idx, this.props.units.find(unit => unit.id === e.target.value))}>
@@ -151,7 +158,9 @@ class RecipeEdit extends Component {
                   {this.props.units.map((unit, idx) => <option value={unit.id} key={unit.id}>{unit.name} ({unit.short})</option>)}
                   </select>                  
                 </td>
-                <td><InputSelectForm value={addition.ingredient} values={this.props.ingredients} onChange={(ingredient) => this.handleIngredientChange(idx, ingredient)} /></td>
+                <td><InputSelectForm value={addition.ingredient} 
+                  values={(text) => this.getIngredients(text, this.props.recipe.additions.map((addition) => addition.ingredient ? addition.ingredient.id : -1 ))} 
+                  onSubmit={(ingredient) => this.handleIngredientChange(idx, ingredient)} /></td>
                 <td><button onClick={(e) => {
                   e.preventDefault();
                   this.props.deleteRecipeAddition(idx);}}>Delete</button></td>

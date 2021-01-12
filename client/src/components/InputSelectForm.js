@@ -24,16 +24,21 @@ class InputSelectForm extends Component {
     }
 
     setText(text) {
-        const values = this.props.values.filter(value => value.name.toLowerCase().startsWith(text.toLowerCase()));
-        const target = this.props.values.find((value) => value.name.toLowerCase() === text.toLowerCase());
-        const selected = target ? 0 : -1;
+        this.props.values(text).then((values) => {
+            const selected = values.findIndex((value) => value.name.toLowerCase() === text.toLowerCase());
+            const target = selected >= 0 ? values[selected] : null;
 
-        this.setState({
-            text,
-            values,
-            target,
-            selected,
-        })
+            this.setState({
+                text,
+                values,
+                target,
+                selected,
+            }, () => this.debug());
+        });
+    }
+
+    debug() {
+        // console.log(`Text: ${this.state.text} Selected: ${this.state.selected} Number of Values: ${this.state.values.length}`)
     }
 
     handleKeyUp(e) {
@@ -43,25 +48,33 @@ class InputSelectForm extends Component {
             this.setState({
                 selected: selected,
                 target: this.state.values[selected]
-            })
+            }, () => this.debug())
         } else if (e.key === 'ArrowUp' && this.state.selected >= 0) {
             e.preventDefault();
             const selected = this.state.selected - 1;
             this.setState({
                 selected,
                 target: selected < 0 ? null : this.state.values[selected]
-            })
-        } else if (e.key === 'Enter') {
-            e.preventDefault();
-            const text = this.state.values[this.state.selected].name;
-            this.setText(text);
+            }, () => this.debug())
         } else if (e.key === 'Escape') {
-            console.log("ESC");
+            // console.log("ESC");
             e.preventDefault();
 
             this.setText((this.props.value) ? this.props.value.name : '');
-        } else {
-            // console.log(e.key);
+        }
+        
+        else {
+             // console.log(e.key);
+        }
+    }
+
+    handleKeyDown(e) {
+        if (e.key === 'Tab') {
+            this.submit(e);
+        }  else if (e.key === 'Enter') {
+            e.preventDefault();
+            console.log("submit");
+            this.submit();
         }
     }
 
@@ -70,21 +83,33 @@ class InputSelectForm extends Component {
             focus:false
         });
 
+       // console.log("blur");
+    }
+
+    submit() {
         if (this.state.selected < 0) {
-            if (this.state.text.length === 0) {
-                this.props.onChange(null);
+            if (this.state.text.length > 0) {
+              //  console.log("Create: " + this.state.text);
+                this.props.onSubmit({name:this.state.text})
+                
             } else {
-                this.props.onChange({name: this.state.text});
+               // console.log("onReset");
             }
         } else {
-            if (!this.props.value || (this.props.value.id !== this.state.target.id)) {
-                this.props.onChange(this.state.target);
-            }
-            
+           // console.log("Use: " + this.state.target.name);
             this.setState({
                 text: this.state.target.name
-            })
+            }, () => this.props.onSubmit(this.state.target));
         }
+
+        if (this.props.clearOnSubmit || this.props.clearOnCancel) {
+          //  console.log("CLEAAN!");
+            this.setText('');
+        }
+    }
+
+    cancel() {
+
     }
 
     render() {
@@ -93,9 +118,11 @@ class InputSelectForm extends Component {
             onChange={(e) => this.setText(e.target.value)} 
             onFocus={() => this.setState({focus:true})} 
             onBlur={() => this.handleBlur()} 
-            onKeyUp={(e) => this.handleKeyUp(e)} />
+            onKeyUp={(e) => this.handleKeyUp(e)}
+            onKeyDown={(e) => this.handleKeyDown(e)}
+            placeholder={this.props.placeholder} />
             {(this.state.focus && this.state.text.length > 0 ) && <div style={{width: this.state.width}}>
-                {!this.state.target && this.state.text.length > 0 && <div className={this.state.selected < 0 ? 'selected' : ''}>Create: {this.state.text}</div>}
+                {this.state.text.length > 0 && <div className={this.state.selected < 0 ? 'selected' : ''}>Create: {this.state.text}</div>}
                 {this.state.values.map((value, idx) => <div key={value.id} className={this.state.selected === idx ? 'selected' : ''}>{value.name}</div>)}                
             </div>}
         </div>;

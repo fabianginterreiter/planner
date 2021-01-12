@@ -14,33 +14,37 @@ import {
 
 function App() {
   return (
-      <Router className="App">
-      <div>
-        <nav>
-          <ul>
-            <li>
-              <Link to="/">Home</Link>
-            </li>
-            <li>
-              <Link to="/recipes">Recipes</Link>
-            </li>
-            <li>
-              <Link to="/calendar">Calendar</Link>
-            </li>
-          </ul>
-        </nav>
+      <Router>
+      <div className="App">
+        <header>
+          <nav>
+            <ul>
+              <li>
+                <Link to="/">Home</Link>
+              </li>
+              <li>
+                <Link to="/recipes">Recipes</Link>
+              </li>
+              <li>
+                <Link to="/calendar">Calendar</Link>
+              </li>
+            </ul>
+          </nav>
+        </header>
 
-        <Switch>
-          <Route path="/calendar" component={Week} />
-          <Route path="/recipes/:id/edit" component={RecipeEdit} />
-          <Route path="/recipes/:id" component={Recipe} />
-          <Route path="/recipes" component={Recipes} />
-          <Route path="/ingredients/:id" component={Ingredient} />
-          <Route path="/ingredients" component={Ingredients} />
-          <Route path="/">
-          <div>default</div>
-          </Route>
-        </Switch>
+        <main>
+          <Switch>
+            <Route path="/calendar" component={Week} />
+            <Route path="/recipes/:id/edit" component={RecipeEdit} />
+            <Route path="/recipes/:id" component={Recipe} />
+            <Route path="/recipes" component={Recipes} />
+            <Route path="/ingredients/:id" component={Ingredient} />
+            <Route path="/ingredients" component={Ingredients} />
+            <Route path="/">
+            <div>default</div>
+            </Route>
+          </Switch>
+        </main>
       </div>
     </Router>
   );
