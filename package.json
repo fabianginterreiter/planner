@@ -6,7 +6,8 @@
     "client": "cd client && yarn start",
     "server": "nodemon server.js",
     "dev": "concurrently --kill-others-on-fail \"yarn server\" \"yarn client\"",
-    "build": "cd client && yarn build"
+    "build": "cd client && yarn build",
+    "migrate": "knex migrate:latest"
   },
   "author": "",
   "license": "ISC",
