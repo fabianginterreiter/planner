@@ -1,6 +1,7 @@
 require('dotenv').config();
 const express = require('express');
 const bodyParser = require('body-parser');
+const path = require('path');
 var { graphqlHTTP } = require('express-graphql');
 var { GraphQLSchema, GraphQLObjectType, GraphQLSchema, GraphQLList, GraphQLString, GraphQLInt, GraphQLID, GraphQLFloat, GraphQLNonNull, GraphQLInputObjectType } = require('graphql');
 
@@ -378,5 +379,8 @@ app.use('/graphql', graphqlHTTP({
 }));
 
 app.use(express.static('client/build'));
+
+app.get('/*', (req, res) => res.sendFile(path.join(__dirname, 'client/build', 'index.html')))
+
 
 app.listen(port, () => console.log(`Listening on port ${port}`));
