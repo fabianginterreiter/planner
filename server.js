@@ -1,9 +1,14 @@
+require('dotenv').config();
 const express = require('express');
 const bodyParser = require('body-parser');
 var { graphqlHTTP } = require('express-graphql');
 var { GraphQLSchema, GraphQLObjectType, GraphQLSchema, GraphQLList, GraphQLString, GraphQLInt, GraphQLID, GraphQLFloat, GraphQLNonNull, GraphQLInputObjectType } = require('graphql');
 
-const knex = require('knex')(require('./knexfile')['development']);
+const environment = process.env.NODE_ENV || 'development';
+
+console.log(`Environment: ${environment}`)
+
+const knex = require('knex')(require('./knexfile')[environment]);
 
 const app = express();
 const port = process.env.PORT || 5000;

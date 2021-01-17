@@ -25,3 +25,5 @@ yarn.lock
 package-lock.json
 
 dev.sqlite3
+
+.env
