@@ -1,27 +1,28 @@
 
 exports.up = function(knex) {
     return knex.schema
-    .createTable('units', function (table) {
+    .createTable('units', (table) => {
         table.increments();
-        table.timestamps(false, true);
         table.string('name', 50).notNullable();
         table.string('short', 20).notNullable();
     })
-    .createTable('ingredients', function (table) {
+    .createTable('ingredients', (table) => {
         table.increments('id');
-        table.timestamps(false, true);
         table.string('name', 255).notNullable();
         table.integer('default_unit_id');
-        table.foreign('default_unit_id').references('id').inTable('units');
+        table.text('description');
+        table.boolean('vegan');
+        table.boolean('vegetarian');
     })
-    .createTable('recipes', function (table) {
+    .createTable('recipes', (table) => {
        table.increments('id');
        table.timestamps(false, true);
        table.string('name', 255).notNullable();
        table.string('source', 255).notNullable();
        table.integer('portions');
+       table.text('description');
     })
-    .createTable('additions', function(table) {
+    .createTable('additions', (table) => {
         table.integer('recipe_id').unsigned().notNullable();
         table.foreign('recipe_id').references('id').inTable('recipes');
         table.integer('ingredient_id').unsigned().notNullable();
@@ -31,14 +32,14 @@ exports.up = function(knex) {
         table.integer('position');
         table.unique(['recipe_id', 'ingredient_id']);
     })
-    .createTable('steps', function (table) {
+    .createTable('steps', (table) => {
         table.text('description').notNullable();
         table.integer('recipe_id').unsigned().notNullable();
         table.foreign('recipe_id').references('id').inTable('recipes');
         table.integer('position');
         table.unique(['recipe_id', 'position']);
     })
-    .createTable('entries', function (table) {
+    .createTable('entries', (table) => {
         table.integer('year').notNullable();
         table.integer('month').notNullable();
         table.integer('day').notNullable();
@@ -46,7 +47,7 @@ exports.up = function(knex) {
         table.integer('recipe_id').notNullable();
         table.foreign('recipe_id').references('id').inTable('recipes');
         table.unique(['recipe_id', 'year', 'month', 'day']);
-    })
+    });
 };
 
 exports.down = function(knex) {

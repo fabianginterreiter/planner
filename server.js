@@ -3,7 +3,7 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const path = require('path');
 var { graphqlHTTP } = require('express-graphql');
-var { GraphQLSchema, GraphQLObjectType, GraphQLSchema, GraphQLList, GraphQLString, GraphQLInt, GraphQLID, GraphQLFloat, GraphQLNonNull, GraphQLInputObjectType } = require('graphql');
+var { GraphQLSchema, GraphQLObjectType, GraphQLSchema, GraphQLList, GraphQLString, GraphQLInt, GraphQLID, GraphQLFloat, GraphQLNonNull, GraphQLInputObjectType, GraphQLBoolean } = require('graphql');
 
 const environment = process.env.NODE_ENV || 'development';
 
@@ -22,7 +22,11 @@ var unitType = new GraphQLObjectType({
   fields: {
     id: { type: GraphQLID },
     name: { type: GraphQLString },
-    short: { type: GraphQLString }
+    short: { type: GraphQLString },
+    used: { 
+      type: GraphQLBoolean,
+      resolve: ({id}) => knex('additions').where('unit_id', id).limit(1).then((results) => (results.length > 0))
+    }
   }
 });
 
@@ -150,13 +154,18 @@ var queryType = new GraphQLObjectType({
     recipes: {
       type: new GraphQLList(recipeType),
       args: {
-        id: { type: GraphQLInt }
+        id: { type: GraphQLInt },
+        unitId: { type: GraphQLInt }
       },
-      resolve: (_, {id}) => {
+      resolve: (_, {id, unitId}) => {
         var query = knex('recipes').orderBy('name', 'asc');
 
         if (id) {
           query.where('id', id);
+        }
+
+        if (unitId) {
+          query.whereExists(knex('additions').where('unit_id', unitId).whereRaw('additions.recipe_id = recipes.id'));
         }
 
         return query;
@@ -364,6 +373,33 @@ var mutationType = new GraphQLObjectType({
         };
         return knex('entries').where('year', object.year).where('month', object.month).where('day', object.day).where('recipe_id', recipeId).del().then(() => "OK");
       }
+    },
+
+    createUnit: {
+      type: unitType,
+      args: {
+        name: { type: GraphQLString },
+        short: { type: GraphQLString }
+      },
+      resolve: (_, {name, short}) => knex('units').insert({name, short}).then((ids) => knex('units').where('id', ids[0]).first())
+    },
+
+    editUnit: {
+      type: unitType,
+      args: {
+        id: { type: GraphQLInt },
+        name: { type: GraphQLString },
+        short: { type: GraphQLString }
+      },
+      resolve: (_, {id, name, short}) => knex('units').where('id', id).update({name, short}).then(() => knex('units').where('id', id).first())
+    },
+
+    deleteUnit: {
+      type: GraphQLString,
+      args: {
+        id: {type: GraphQLInt},
+      },
+      resolve: (_, {id}) => knex('units').where('id', id).del().then(() => "OK")
     }
   }  
 });

@@ -5,11 +5,13 @@ import RecipeEdit from './components/RecipeEdit';
 import Ingredients from './components/Ingredients';
 import Ingredient from './components/Ingredient';
 import Week from './components/Week';
+import Units from './components/Units';
 import {
   BrowserRouter as Router,
   Switch,
   Route,
-  Link
+  Link,
+  NavLink
 } from "react-router-dom";
 
 function App() {
@@ -19,14 +21,17 @@ function App() {
         <header>
           <nav>
             <ul>
-              <li>
-                <Link to="/">Home</Link>
+              <li className="title">
+                <Link to="/">🍲 CookBook</Link>
               </li>
-              <li>
-                <Link to="/recipes">Recipes</Link>
+              <li className="nav">
+                <NavLink to="/recipes">Recipes</NavLink>
               </li>
-              <li>
-                <Link to="/calendar">Calendar</Link>
+              <li className="nav">
+                <NavLink to="/calendar">Calendar</NavLink>
+              </li>
+              <li className="nav right">
+                <Link to="/units">☰</Link>
               </li>
             </ul>
           </nav>
@@ -40,6 +45,7 @@ function App() {
             <Route path="/recipes" component={Recipes} />
             <Route path="/ingredients/:id" component={Ingredient} />
             <Route path="/ingredients" component={Ingredients} />
+            <Route path="/units" component={Units} />
             <Route path="/">
             <div>default</div>
             </Route>
