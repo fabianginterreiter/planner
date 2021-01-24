@@ -10,32 +10,14 @@ import {
   BrowserRouter as Router,
   Switch,
   Route,
-  Link,
-  NavLink
 } from "react-router-dom";
+import Header from './components/Header'
 
 function App() {
   return (
-      <Router>
+    <Router>
       <div className="App">
-        <header>
-          <nav>
-            <ul>
-              <li className="title">
-                <Link to="/">🍲 CookBook</Link>
-              </li>
-              <li className="nav">
-                <NavLink to="/recipes">Recipes</NavLink>
-              </li>
-              <li className="nav">
-                <NavLink to="/calendar">Calendar</NavLink>
-              </li>
-              <li className="nav right">
-                <Link to="/units">☰</Link>
-              </li>
-            </ul>
-          </nav>
-        </header>
+        <Header />
 
         <main>
           <Switch>
@@ -47,7 +29,7 @@ function App() {
             <Route path="/ingredients" component={Ingredients} />
             <Route path="/units" component={Units} />
             <Route path="/">
-            <div>default</div>
+              <div>default</div>
             </Route>
           </Switch>
         </main>

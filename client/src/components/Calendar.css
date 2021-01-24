@@ -1,17 +1,17 @@
 .day {
-    border: 1px solid black;
-    background-color: yellow;
+  border: 1px solid black;
+  background-color: yellow;
 }
 
-.day > tr > th {
-    background-color: blue;
-    color: white;
+.day>tr>th {
+  background-color: blue;
+  color: white;
 }
 
-.day > tr:nth-child(odd) > td {
-    background-color: #eeeeee;
+.day>tr:nth-child(odd)>td {
+  background-color: #eeeeee;
 }
 
-.day > tr:nth-child(even) > td {
-    background-color: #dddddd;
+.day>tr:nth-child(even)>td {
+  background-color: #dddddd;
 }

@@ -3,7 +3,7 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const path = require('path');
 var { graphqlHTTP } = require('express-graphql');
-var { GraphQLSchema, GraphQLObjectType, GraphQLSchema, GraphQLList, GraphQLString, GraphQLInt, GraphQLID, GraphQLFloat, GraphQLNonNull, GraphQLInputObjectType, GraphQLBoolean } = require('graphql');
+var { GraphQLSchema, GraphQLObjectType, GraphQLSchema, GraphQLList, GraphQLEnumType, GraphQLString, GraphQLInt, GraphQLID, GraphQLFloat, GraphQLNonNull, GraphQLInputObjectType, GraphQLBoolean } = require('graphql');
 
 const environment = process.env.NODE_ENV || 'development';
 
@@ -17,38 +17,57 @@ const port = process.env.PORT || 5000;
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
+const orderByHelper = (query, orderBy) => {
+  if (!orderBy || orderBy.length === 0) {
+    return query;
+  }
+
+  Object.keys(orderBy).forEach((key) => query.orderBy(key, orderBy[key]));
+  return query;
+};
+
+var orderByType = new GraphQLEnumType({
+  name: 'OrderByType',
+  values: {
+    asc: { value: 'asc' },
+    desc: { value: 'desc' }
+  }
+})
+
 var unitType = new GraphQLObjectType({
   name: 'Unit',
   fields: {
     id: { type: GraphQLID },
     name: { type: GraphQLString },
     short: { type: GraphQLString },
-    used: { 
+    used: {
       type: GraphQLBoolean,
-      resolve: ({id}) => knex('additions').where('unit_id', id).limit(1).then((results) => (results.length > 0))
+      resolve: ({ id }) => knex('additions').where('unit_id', id).limit(1).then((results) => (results.length > 0))
     }
   }
 });
 
 var ingredientType = new GraphQLObjectType({
   name: 'Ingredient',
-  fields: () => { return {
-    id: { type: GraphQLID },
-    name: { type: GraphQLString },
-    defaultUnit: {
-      type: unitType,
-      resolve: ({default_unit_id}) => {
-        return knex('units').where('id', default_unit_id).first();
-      }
-    },
+  fields: () => {
+    return {
+      id: { type: GraphQLID },
+      name: { type: GraphQLString },
+      defaultUnit: {
+        type: unitType,
+        resolve: ({ default_unit_id }) => {
+          return knex('units').where('id', default_unit_id).first();
+        }
+      },
 
-    recipes: {
-      type: new GraphQLList(recipeType),
-      resolve: ({id}) =>  knex('recipes')
-        .join('additions', 'recipes.id', 'additions.recipe_id')
-        .where('additions.ingredient_id', id)
-        .select('recipes.*')
-    }}
+      recipes: {
+        type: new GraphQLList(recipeType),
+        resolve: ({ id }) => knex('recipes')
+          .join('additions', 'recipes.id', 'additions.recipe_id')
+          .where('additions.ingredient_id', id)
+          .select('recipes.*')
+      }
+    }
   }
 });
 
@@ -64,17 +83,17 @@ var stepType = new GraphQLObjectType({
 var additionType = new GraphQLObjectType({
   name: 'Addition',
   fields: {
-    amount: {type: GraphQLFloat },
-    position: {type: GraphQLInt },
+    amount: { type: GraphQLFloat },
+    position: { type: GraphQLInt },
     unit: {
       type: unitType,
-      resolve: ({unit_id}) => {
+      resolve: ({ unit_id }) => {
         return knex('units').where('id', unit_id).first();
       }
     },
     ingredient: {
       type: ingredientType,
-      resolve: ({ingredient_id}) => {
+      resolve: ({ ingredient_id }) => {
         return knex('ingredients').where('id', ingredient_id).first();
       }
     },
@@ -90,14 +109,14 @@ var recipeType = new GraphQLObjectType({
     portions: { type: GraphQLInt },
     steps: {
       type: GraphQLList(stepType),
-      resolve: ({id}) => {
+      resolve: ({ id }) => {
         return knex('steps').where('recipe_id', id);
       }
     },
 
     additions: {
       type: GraphQLList(additionType),
-      resolve: ({id}) => {
+      resolve: ({ id }) => {
         return knex('additions').where('recipe_id', id).orderBy('position');
       }
     }
@@ -110,7 +129,7 @@ var entryType = new GraphQLObjectType({
     portions: { type: GraphQLInt },
     recipe: {
       type: recipeType,
-      resolve: ({recipe_id}) => {
+      resolve: ({ recipe_id }) => {
         return knex('recipes').where('id', recipe_id).first();
       }
     }
@@ -123,7 +142,7 @@ var dayType = new GraphQLObjectType({
     day: { type: GraphQLString },
     entries: {
       type: GraphQLList(entryType),
-      resolve: ({day}) => {
+      resolve: ({ day }) => {
         const values = day.split("-")
 
         return knex('entries').where('year', values[0]).where('month', values[1]).where('day', values[2]);
@@ -140,7 +159,7 @@ var queryType = new GraphQLObjectType({
       args: {
         id: { type: GraphQLInt }
       },
-      resolve: (_, {id}) => {
+      resolve: (_, { id }) => {
         var query = knex('ingredients');
 
         if (id) {
@@ -157,7 +176,7 @@ var queryType = new GraphQLObjectType({
         id: { type: GraphQLInt },
         unitId: { type: GraphQLInt }
       },
-      resolve: (_, {id, unitId}) => {
+      resolve: (_, { id, unitId }) => {
         var query = knex('recipes').orderBy('name', 'asc');
 
         if (id) {
@@ -175,16 +194,25 @@ var queryType = new GraphQLObjectType({
     units: {
       type: new GraphQLList(unitType),
       args: {
-        id: { type: GraphQLInt }
+        id: { type: GraphQLInt },
+        orderBy: {
+          type: new GraphQLInputObjectType({
+            name: 'UnitsOrderByType',
+            fields: {
+              name: { type: orderByType },
+              short: { type: orderByType }
+            }
+          })
+        }
       },
-      resolve: (_, {id}) => {
+      resolve: (_, { id, orderBy }) => {
         var query = knex('units');
 
         if (id) {
           query.where('id', id);
         }
 
-        return query;
+        return orderByHelper(query, orderBy);
       }
     },
 
@@ -193,8 +221,8 @@ var queryType = new GraphQLObjectType({
       args: {
         days: { type: GraphQLList(GraphQLString) }
       },
-      resolve: (_, {days}) => {
-        return days.map((day) => ({day}));
+      resolve: (_, { days }) => {
+        return days.map((day) => ({ day }));
       }
     }
   }
@@ -203,15 +231,15 @@ var queryType = new GraphQLObjectType({
 var mutationType = new GraphQLObjectType({
   name: 'Mutation',
 
-  fields: {
+  fields: {
     createRecipe: {
       type: recipeType,
       args: {
-        name: { type: GraphQLString } 
+        name: { type: GraphQLString }
       },
-      resolve: (_, {name}) => {
+      resolve: (_, { name }) => {
 
-      return knex.table('recipes').insert({
+        return knex.table('recipes').insert({
           name, source: '', portions: 0
         }).then((ids) => knex('recipes').where('id', ids[0]).first());
       }
@@ -224,7 +252,7 @@ var mutationType = new GraphQLObjectType({
         name: { type: GraphQLString },
         source: { type: GraphQLString },
         portions: { type: GraphQLInt },
-        additions: { 
+        additions: {
           type: GraphQLList(new GraphQLInputObjectType({
             name: 'AdditionInputType',
             fields: {
@@ -236,7 +264,7 @@ var mutationType = new GraphQLObjectType({
         },
 
         steps: {
-          type: GraphQLList( new GraphQLInputObjectType({
+          type: GraphQLList(new GraphQLInputObjectType({
             name: 'StepsInputType',
             fields: {
               description: { type: GraphQLString }
@@ -245,29 +273,31 @@ var mutationType = new GraphQLObjectType({
         }
       },
 
-      resolve: (_, {id, name, source, portions, additions, steps}) => {
+      resolve: (_, { id, name, source, portions, additions, steps }) => {
         return knex('recipes').where('id', id).update({
           name,
           source,
-          portions, 
+          portions,
         })
-        .then(() => knex('additions').where('recipe_id', id).del())
-        .then(() => knex('additions').insert(additions.map((addition, index) => {
-          return {
-          "recipe_id": id,
-          "ingredient_id": addition.ingredientId,
-          "unit_id": addition.unitId,
-          "amount": addition.amount,
-          "position": index
-        }})))
-        .then(() => knex('steps').where('recipe_id', id).del())
-        .then(() => knex('steps').insert(steps.map((step, index) => {
-          return {
-          "recipe_id": id,
-          "position": index,
-          "description": step.description
-        }})))
-        .then(() => knex('recipes').where('id', id).first());
+          .then(() => knex('additions').where('recipe_id', id).del())
+          .then(() => knex('additions').insert(additions.map((addition, index) => {
+            return {
+              "recipe_id": id,
+              "ingredient_id": addition.ingredientId,
+              "unit_id": addition.unitId,
+              "amount": addition.amount,
+              "position": index
+            }
+          })))
+          .then(() => knex('steps').where('recipe_id', id).del())
+          .then(() => knex('steps').insert(steps.map((step, index) => {
+            return {
+              "recipe_id": id,
+              "position": index,
+              "description": step.description
+            }
+          })))
+          .then(() => knex('recipes').where('id', id).first());
       }
     },
 
@@ -276,7 +306,7 @@ var mutationType = new GraphQLObjectType({
       args: {
         id: { type: GraphQLInt }
       },
-      resolve: (_, {id}) => {
+      resolve: (_, { id }) => {
         return knex('recipes').where('id', id).del().then(() => { return "OK" });
       }
     },
@@ -286,7 +316,7 @@ var mutationType = new GraphQLObjectType({
       args: {
         name: { type: GraphQLString }
       },
-      resolve: (_, {name}) => knex('ingredients').insert({name}).then((ids) => knex('ingredients').where('id', ids[0]).first())
+      resolve: (_, { name }) => knex('ingredients').insert({ name }).then((ids) => knex('ingredients').where('id', ids[0]).first())
     },
 
     createIngredients: {
@@ -294,8 +324,8 @@ var mutationType = new GraphQLObjectType({
       args: {
         names: { type: GraphQLList(GraphQLString) }
       },
-      resolve: (_, {names}) => {
-        return Promise.all(names.map((name) => knex('ingredients').insert({name}).then((ids) => (ids[0])))).then((ids) => {
+      resolve: (_, { names }) => {
+        return Promise.all(names.map((name) => knex('ingredients').insert({ name }).then((ids) => (ids[0])))).then((ids) => {
           return knex('ingredients').whereIn('id', ids);
         })
       }
@@ -304,34 +334,34 @@ var mutationType = new GraphQLObjectType({
     updateIngredient: {
       type: ingredientType,
       args: {
-        id: {type: GraphQLInt},
-        name: {type: GraphQLString}
+        id: { type: GraphQLInt },
+        name: { type: GraphQLString }
       },
-      resolve: (_, {name}) => knex('ingredients').where('id', id).update({name}).then(() => knex('ingredients').where('id', id).first())
+      resolve: (_, { name }) => knex('ingredients').where('id', id).update({ name }).then(() => knex('ingredients').where('id', id).first())
     },
 
     deleteIngredient: {
       type: GraphQLString,
       args: {
-        id: { type: GraphQLInt}
+        id: { type: GraphQLInt }
       },
-      resolve: (_, {id}) => knex('ingredients').where('id', id).del().then(() => { return "OK" })
+      resolve: (_, { id }) => knex('ingredients').where('id', id).del().then(() => { return "OK" })
     },
 
     createEntry: {
       type: entryType,
       args: {
-        day: { type: GraphQLString},
-        portions:{ type:  GraphQLInt},
-        recipeId: { type: GraphQLInt},
+        day: { type: GraphQLString },
+        portions: { type: GraphQLInt },
+        recipeId: { type: GraphQLInt },
       },
-      resolve: (_, {day, recipeId, portions}) => {
+      resolve: (_, { day, recipeId, portions }) => {
         const values = day.split("-");
         const object = {
-          year: values[0], 
-          month: values[1], 
+          year: values[0],
+          month: values[1],
           day: values[2],
-          recipe_id: recipeId, 
+          recipe_id: recipeId,
           portions
         };
         return knex('entries').insert(object).then(() => object);
@@ -341,34 +371,34 @@ var mutationType = new GraphQLObjectType({
     updateEntry: {
       type: entryType,
       args: {
-        day: { type: GraphQLString},
-        portions:{ type:  GraphQLInt},
-        recipeId: { type: GraphQLInt},
+        day: { type: GraphQLString },
+        portions: { type: GraphQLInt },
+        recipeId: { type: GraphQLInt },
       },
-      resolve: (_, {day, recipeId, portions}) => {
+      resolve: (_, { day, recipeId, portions }) => {
         const values = day.split("-");
         const object = {
-          year: values[0], 
-          month: values[1], 
+          year: values[0],
+          month: values[1],
           day: values[2],
-          recipe_id: recipeId, 
+          recipe_id: recipeId,
           portions
         };
-        return knex('entries').where('year', object.year).where('month', object.month).where('day', object.day).where('recipe_id', recipeId).update({portions}).then(() => object);
+        return knex('entries').where('year', object.year).where('month', object.month).where('day', object.day).where('recipe_id', recipeId).update({ portions }).then(() => object);
       }
     },
 
     deleteEntry: {
       type: GraphQLString,
       args: {
-        day: { type: GraphQLString},
-        recipeId: { type: GraphQLInt},
+        day: { type: GraphQLString },
+        recipeId: { type: GraphQLInt },
       },
-      resolve: (_, {day, recipeId, portions}) => {
+      resolve: (_, { day, recipeId, portions }) => {
         const values = day.split("-");
         const object = {
-          year: values[0], 
-          month: values[1], 
+          year: values[0],
+          month: values[1],
           day: values[2],
         };
         return knex('entries').where('year', object.year).where('month', object.month).where('day', object.day).where('recipe_id', recipeId).del().then(() => "OK");
@@ -381,7 +411,7 @@ var mutationType = new GraphQLObjectType({
         name: { type: GraphQLString },
         short: { type: GraphQLString }
       },
-      resolve: (_, {name, short}) => knex('units').insert({name, short}).then((ids) => knex('units').where('id', ids[0]).first())
+      resolve: (_, { name, short }) => knex('units').insert({ name, short }).then((ids) => knex('units').where('id', ids[0]).first())
     },
 
     editUnit: {
@@ -391,17 +421,17 @@ var mutationType = new GraphQLObjectType({
         name: { type: GraphQLString },
         short: { type: GraphQLString }
       },
-      resolve: (_, {id, name, short}) => knex('units').where('id', id).update({name, short}).then(() => knex('units').where('id', id).first())
+      resolve: (_, { id, name, short }) => knex('units').where('id', id).update({ name, short }).then(() => knex('units').where('id', id).first())
     },
 
     deleteUnit: {
       type: GraphQLString,
       args: {
-        id: {type: GraphQLInt},
+        id: { type: GraphQLInt },
       },
-      resolve: (_, {id}) => knex('units').where('id', id).del().then(() => "OK")
+      resolve: (_, { id }) => knex('units').where('id', id).del().then(() => "OK")
     }
-  }  
+  }
 });
 
 var schema = new GraphQLSchema({

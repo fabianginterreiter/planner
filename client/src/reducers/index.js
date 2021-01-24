@@ -7,5 +7,5 @@ import ingredients from './ingredients';
 import ingredient from './ingredient';
 
 export default combineReducers({
-    recipes, recipe, units, ingredients, ingredient
+  recipes, recipe, units, ingredients, ingredient
 })
